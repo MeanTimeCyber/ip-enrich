@@ -1,0 +1,8 @@
+github.com/markkurossi/tabulate v0.0.0-20251126123558-a08056f6160f h1:u5MRsdjmedlD5iDJzIzPICOhdD2hs9rQKixfuZf6jqY=
+github.com/markkurossi/tabulate v0.0.0-20251126123558-a08056f6160f/go.mod h1:Jol1zHueCHE+CSGXfTFoSGftCpxVkFZSkAQkZP2LFrU=
+github.com/oschwald/maxminddb-golang/v2 v2.1.1 h1:lA8FH0oOrM4u7mLvowq8IT6a3Q/qEnqRzLQn9eH5ojc=
+github.com/oschwald/maxminddb-golang/v2 v2.1.1/go.mod h1:PLdx6PR+siSIoXqqy7C7r3SB3KZnhxWr1Dp6g0Hacl8=
+golang.org/x/sys v0.38.0 h1:3yZWxaJjBmCWXqhN1qh02AkOnCQ1poK6oF+a7xWL6Gc=
+golang.org/x/sys v0.38.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
+golang.org/x/text v0.31.0 h1:aC8ghyu4JhP8VojJ2lEHBnochRno1sgL6nEi9WGFGMM=
+golang.org/x/text v0.31.0/go.mod h1:tKRAlv61yKIjGGHX/4tP1LTbc13YSec1pxVEWXzfoeM=
