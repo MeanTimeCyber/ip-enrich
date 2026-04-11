@@ -11,7 +11,7 @@ import (
 
 // https://www.maxmind.com/en/geoip-databases
 func GetCityFromIP(ip netip.Addr, dbPath string) (*City, error) {
-	// Open the MaxMind database. The Open function returns a Reader 
+	// Open the MaxMind database. The Open function returns a Reader
 	// that can be used to perform lookups on the database.
 	// The Reader must be closed when it is no longer needed.
 	db, err := maxminddb.Open(dbPath)
@@ -35,23 +35,24 @@ func GetCityFromIP(ip netip.Addr, dbPath string) (*City, error) {
 	return &city, nil
 }
 
-// displayCityName returns the city name to display, which is the city name if it is available, 
+// displayCityName returns the city name to display, which is the city name if it is available,
 // otherwise it falls back to the locality name, and if that is not available it returns an empty string.
 func PrintCityDetails(city *City) {
 	displayCity := displayCityName(*city)
 	rawLocality := englishName(city.City.Names)
 
-	rows := []tableRow{
-		{label: "City", value: displayCity},
-		{label: "Country", value: fmt.Sprintf("%s (%s)", englishName(city.Country.Names), city.Country.ISOCode)},
+	var rows []tableRow
+
+	if city.Location.Latitude != 0 || city.Location.Longitude != 0 {
+		rows = append(rows, tableRow{label: "Coordinates", value: fmt.Sprintf("%.4f, %.4f", city.Location.Latitude, city.Location.Longitude)})
+	}
+
+	if city.Location.AccuracyRadius != 0 {
+		rows = append(rows, tableRow{label: "Accuracy Radius", value: fmt.Sprintf("%d km", city.Location.AccuracyRadius)})
 	}
 
 	if rawLocality != "" && rawLocality != displayCity {
 		rows = append(rows, tableRow{label: "Locality", value: rawLocality})
-	}
-
-	if len(city.Subdivisions) > 0 {
-		rows = append(rows, tableRow{label: "Region", value: subdivisionValue(city.Subdivisions[0])})
 	}
 
 	if len(city.Subdivisions) > 1 {
@@ -62,24 +63,20 @@ func PrintCityDetails(city *City) {
 		rows = append(rows, tableRow{label: fmt.Sprintf("Subdivision %d", index+1), value: subdivisionValue(city.Subdivisions[index])})
 	}
 
-	if city.Continent.Code != "" || len(city.Continent.Names) > 0 {
-		rows = append(rows, tableRow{label: "Continent", value: fmt.Sprintf("%s (%s)", englishName(city.Continent.Names), city.Continent.Code)})
-	}
-
 	if city.Postal.Code != "" {
 		rows = append(rows, tableRow{label: "Postal Code", value: city.Postal.Code})
 	}
 
-	if city.Location.TimeZone != "" {
-		rows = append(rows, tableRow{label: "Time Zone", value: city.Location.TimeZone})
+	rows = append(rows, tableRow{label: "City", value: displayCity})
+
+	if len(city.Subdivisions) > 0 {
+		rows = append(rows, tableRow{label: "Region", value: subdivisionValue(city.Subdivisions[0])})
 	}
 
-	if city.Location.Latitude != 0 || city.Location.Longitude != 0 {
-		rows = append(rows, tableRow{label: "Coordinates", value: fmt.Sprintf("%.4f, %.4f", city.Location.Latitude, city.Location.Longitude)})
-	}
+	rows = append(rows, tableRow{label: "Country", value: fmt.Sprintf("%s (%s)", englishName(city.Country.Names), city.Country.ISOCode)})
 
-	if city.Location.AccuracyRadius != 0 {
-		rows = append(rows, tableRow{label: "Accuracy Radius", value: fmt.Sprintf("%d km", city.Location.AccuracyRadius)})
+	if city.Country.IsInEuropeanUnion {
+		rows = append(rows, tableRow{label: "In European Union", value: "yes"})
 	}
 
 	if city.RegisteredCountry.ISOCode != "" {
@@ -94,8 +91,12 @@ func PrintCityDetails(city *City) {
 		rows = append(rows, tableRow{label: "Represented Country", value: representedCountry})
 	}
 
-	if city.Country.IsInEuropeanUnion {
-		rows = append(rows, tableRow{label: "In European Union", value: "yes"})
+	if city.Continent.Code != "" || len(city.Continent.Names) > 0 {
+		rows = append(rows, tableRow{label: "Continent", value: fmt.Sprintf("%s (%s)", englishName(city.Continent.Names), city.Continent.Code)})
+	}
+
+	if city.Location.TimeZone != "" {
+		rows = append(rows, tableRow{label: "Time Zone", value: city.Location.TimeZone})
 	}
 
 	table := tabulate.New(tabulate.Simple)
