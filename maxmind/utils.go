@@ -12,7 +12,7 @@ import (
 func printDBInfo(db *maxminddb.Reader) {
 	meta := db.Metadata
 	buildTime := meta.BuildTime()
-	fmt.Printf("Database: %s (IPv%d, built %s)\n", meta.DatabaseType, meta.IPVersion, buildTime.Format("2006-01-02"))
+	//fmt.Printf("Database: %s (IPv%d, built %s)\n", meta.DatabaseType, meta.IPVersion, buildTime.Format("2006-01-02"))
 	if buildTime.Before(time.Now().AddDate(0, -3, 0)) {
 		fmt.Fprintln(os.Stderr, "Warning: database is more than 3 months old")
 	}

@@ -17,7 +17,7 @@ func GetASNFromIP(ip netip.Addr, dbPath string) (*ASN, error) {
 	}
 	defer db.Close()
 
-	// printDBInfo(db)
+	printDBInfo(db)
 
 	// Decode the record into an ASN struct.
 	// The ASN struct must have fields that match the structure of the database record,
