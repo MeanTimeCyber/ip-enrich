@@ -9,6 +9,11 @@ import (
 	"github.com/MeanTimeCyber/ip-enrich/maxmind"
 )
 
+const (
+	maxmindCityDBEnv = "MAXMIND_CITY_DB"
+	maxmindASNDBEnv  = "MAXMIND_ASN_DB"
+)
+
 func main() {
 	// Define a flag for the IP address to lookup
 	var ipString string
@@ -25,10 +30,16 @@ func main() {
 	// validate the IP address format
 	ip := checkAndParseAddressString(ipString)
 
+	printCity(ip)
+	printASN(ip)
+}
+
+// printCity performs the MaxMind City lookup for the given IP address and prints the results.
+func printCity(ip netip.Addr) {
 	// Get the MaxMind City DB path from the environment variable
-	dbPath := os.Getenv("MAXMINDCITYDB")
+	dbPath := os.Getenv(maxmindCityDBEnv)
 	if dbPath == "" {
-		fmt.Println("Must supply MaxMind City DB path with MAXMINDCITYDB")
+		fmt.Printf("Must supply MaxMind City DB path with %s\n", maxmindCityDBEnv)
 		os.Exit(-1)
 	}
 
@@ -40,7 +51,29 @@ func main() {
 	}
 
 	// Print the results
+	fmt.Println("\n---- Geo-lookup ----")
 	maxmind.PrintCityDetails(city)
+}
+
+// printASN performs the MaxMind ASN lookup for the given IP address and prints the results.
+func printASN(ip netip.Addr) {
+	// Get the MaxMind ASN DB path from the environment variable
+	dbPath := os.Getenv(maxmindASNDBEnv)
+	if dbPath == "" {
+		fmt.Printf("Must supply MaxMind ASN DB path with %s\n", maxmindASNDBEnv)
+		os.Exit(-1)
+	}
+
+	// Perform the IP lookups
+	asn, err := maxmind.GetASNFromIP(ip, dbPath)
+	if err != nil {
+		fmt.Printf("Error looking up IP address: %v\n", err)
+		os.Exit(-1)
+	}
+
+	// Print the results
+	fmt.Println("\n---- ASN ----")
+	maxmind.PrintASNDetails(asn)
 }
 
 // checkAndParseAddressString validates the IP address format and returns a netip.Addr if valid,

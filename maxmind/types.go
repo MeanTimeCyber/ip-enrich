@@ -45,3 +45,8 @@ type City struct {
 		Names     map[string]string `maxminddb:"names"`
 	} `maxminddb:"subdivisions"`
 }
+
+type ASN struct {
+	AutonomousSystemNumber       uint   `maxminddb:"autonomous_system_number"`
+	AutonomousSystemOrganization string `maxminddb:"autonomous_system_organization"`
+}
