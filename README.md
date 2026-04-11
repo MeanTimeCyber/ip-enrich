@@ -1,11 +1,12 @@
 # ip-enrich
 
-`ip-enrich` is a small Go CLI for enriching an IP address with location data from a MaxMind GeoLite2 City database.
+`ip-enrich` is a small Go CLI for enriching an IP address with location and ASN data from MaxMind databases.
 
 ## Requirements
 
 - Go 1.25.8 or newer
 - A MaxMind GeoLite2 City database file
+- A MaxMind GeoLite2 ASN database file
 
 ## Build
 
@@ -27,24 +28,18 @@ This creates a local executable named `ip-enrich`.
 
 ## Run
 
-Set the MaxMind database path with the `MAXMINDCITYDB` environment variable, then pass the IP address with `-i`.
+Set the MaxMind database paths with `MAXMIND_CITY_DB` and `MAXMIND_ASN_DB`, then pass the IP address with `-i`.
 
 Run directly with Go:
 
 ```bash
-MAXMINDCITYDB=sources/GeoLite2-City.mmdb go run cli/*.go -i 109.158.10.179
+MAXMINDCITYDB=sources/GeoLite2-City.mmdb MAXMIND_ASN_DB=sources/GeoLite2-ASN.mmdb go run cli/*.go -i 8.8.8.8
 ```
 
 Run the built binary:
 
 ```bash
-MAXMINDCITYDB=sources/GeoLite2-City.mmdb ./ip-enrich -i 109.158.10.179
-```
-
-Or use the Makefile run target:
-
-```bash
-MAXMINDCITYDB=sources/GeoLite2-City.mmdb make run IP=109.158.10.179
+MAXMINDCITYDB=sources/GeoLite2-City.mmdb MAXMIND_ASN_DB=sources/GeoLite2-ASN.mmdb ./ip-enrich -i 8.8.8.8
 ```
 
 ## Usage
@@ -56,12 +51,15 @@ MAXMINDCITYDB=sources/GeoLite2-City.mmdb make run IP=109.158.10.179
 Example:
 
 ```bash
-MAXMINDCITYDB=sources/GeoLite2-City.mmdb ./ip-enrich -i 8.8.8.8
+MAXMINDCITYDB=sources/GeoLite2-City.mmdb MAXMIND_ASN_DB=sources/GeoLite2-ASN.mmdb ./ip-enrich -i 8.8.8.8
 ```
 
 ## Notes
 
-- The database path is required through `MAXMINDCITYDB`.
+- The City database path is required through `MAXMINDCITYDB`.
+- The ASN database path is required through `MAXMIND_ASN_DB`.
 - The `-i` flag is required.
 - The Makefile build uses `-trimpath -ldflags="-s -w"` to reduce binary size.
-- Output is printed as a two-column table.
+- Output is printed in two sections:
+	- `---- Geo-lookup ----` as a two-column table.
+	- `---- ASN ----` as `AS<number> <organization>`.
