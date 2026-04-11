@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/netip"
 	"os"
+
+	"github.com/MeanTimeCyber/ip-enrich/maxmind"
 )
 
 func main() {
@@ -31,11 +33,14 @@ func main() {
 	}
 
 	// Perform the IP lookups
-	err := lookupMaxMindCity(ip, dbPath)
+	city, err := maxmind.GetCityFromIP(ip, dbPath)
 	if err != nil {
 		fmt.Printf("Error looking up IP address: %v\n", err)
 		os.Exit(-1)
 	}
+
+	// Print the results
+	maxmind.PrintCityDetails(city)
 }
 
 // checkAndParseAddressString validates the IP address format and returns a netip.Addr if valid,
