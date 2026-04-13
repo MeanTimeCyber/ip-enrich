@@ -79,9 +79,9 @@ func PrintCityDetails(city *City) {
 		rows = append(rows, tableRow{label: "In European Union", value: "yes"})
 	}
 
-	if city.RegisteredCountry.ISOCode != "" {
-		rows = append(rows, tableRow{label: "Registered Country", value: fmt.Sprintf("%s (%s)", englishName(city.RegisteredCountry.Names), city.RegisteredCountry.ISOCode)})
-	}
+	// if city.RegisteredCountry.ISOCode != "" {
+	// 	rows = append(rows, tableRow{label: "Registered Country", value: fmt.Sprintf("%s (%s)", englishName(city.RegisteredCountry.Names), city.RegisteredCountry.ISOCode)})
+	// }
 
 	if city.RepresentedCountry.ISOCode != "" {
 		representedCountry := fmt.Sprintf("%s (%s)", englishName(city.RepresentedCountry.Names), city.RepresentedCountry.ISOCode)
@@ -100,8 +100,6 @@ func PrintCityDetails(city *City) {
 	}
 
 	table := tabulate.New(tabulate.Simple)
-	table.Header("Field").SetAlign(tabulate.ML)
-	table.Header("Value").SetAlign(tabulate.ML)
 
 	for _, row := range rows {
 		dataRow := table.Row()
