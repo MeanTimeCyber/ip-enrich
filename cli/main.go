@@ -3,33 +3,49 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"net/netip"
 	"os"
 
 	"github.com/MeanTimeCyber/ip-enrich/maxmind"
 )
 
-const (
-	maxmindCityDBEnv = "MAXMIND_CITY_DB"
-	maxmindASNDBEnv  = "MAXMIND_ASN_DB"
-)
-
 func main() {
 	// Define a flag for the IP address to lookup
-	var ipString string
+	var ipString, domainString string
 	flag.StringVar(&ipString, "i", "", "IP address to lookup")
+	flag.StringVar(&domainString, "d", "", "Domain to lookup")
 	flag.Parse()
 
-	// Check that the user supplied an IP address
-	if ipString == "" {
-		fmt.Println("Must supply IP address with -i")
+	// Check that the user supplied an IP address or a domain to lookup
+	if ipString == "" && domainString == "" {
+		fmt.Println("Must supply IP address with -i or domain with -d")
 		flag.Usage()
 		os.Exit(-1)
 	}
 
-	// validate the IP address format
-	ip := checkAndParseAddressString(ipString)
+	var ip netip.Addr
 
+	if ipString != "" {
+		fmt.Printf("Looking up address: %s\n", ipString)
+
+		// validate the IP address format
+		ip = checkAndParseAddressString(ipString)
+	} else {
+		// resolve the domain to an IP address
+		resolvedIP, err := net.LookupIP(domainString)
+
+		if err != nil {
+			fmt.Printf("Error resolving domain %q to an address: %s\n", domainString, err.Error())
+			os.Exit(-1)
+		}
+
+		// Use the first resolved IP address for the lookups
+		fmt.Printf("Got address %s for domain %q\n", resolvedIP[0].String(), domainString)
+		ip = checkAndParseAddressString(resolvedIP[0].String())
+	}
+
+	// Perform the MaxMind lookups and print the results
 	printCity(ip)
 	printASN(ip)
 }
@@ -37,9 +53,9 @@ func main() {
 // printCity performs the MaxMind City lookup for the given IP address and prints the results.
 func printCity(ip netip.Addr) {
 	// Get the MaxMind City DB path from the environment variable
-	dbPath := os.Getenv(maxmindCityDBEnv)
+	dbPath := os.Getenv(maxmind.MaxmindCityDBEnv)
 	if dbPath == "" {
-		fmt.Printf("Must supply MaxMind City DB path with %s\n", maxmindCityDBEnv)
+		fmt.Printf("Must supply MaxMind City DB path with %s\n", maxmind.MaxmindCityDBEnv)
 		os.Exit(-1)
 	}
 
@@ -51,16 +67,16 @@ func printCity(ip netip.Addr) {
 	}
 
 	// Print the results
-	fmt.Println("\n---- Geo-lookup ----")
+	fmt.Println("\n---- Geo Lookup ----")
 	maxmind.PrintCityDetails(city)
 }
 
 // printASN performs the MaxMind ASN lookup for the given IP address and prints the results.
 func printASN(ip netip.Addr) {
 	// Get the MaxMind ASN DB path from the environment variable
-	dbPath := os.Getenv(maxmindASNDBEnv)
+	dbPath := os.Getenv(maxmind.MaxmindASNDBEnv)
 	if dbPath == "" {
-		fmt.Printf("Must supply MaxMind ASN DB path with %s\n", maxmindASNDBEnv)
+		fmt.Printf("Must supply MaxMind ASN DB path with %s\n", maxmind.MaxmindASNDBEnv)
 		os.Exit(-1)
 	}
 
