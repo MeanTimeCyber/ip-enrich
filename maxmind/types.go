@@ -1,5 +1,10 @@
 package maxmind
 
+const (
+	MaxmindCityDBEnv = "MAXMIND_CITY_DB"
+	MaxmindASNDBEnv  = "MAXMIND_ASN_DB"
+)
+
 type City struct {
 	City struct {
 		GeoNameID uint32            `maxminddb:"geoname_id"`
