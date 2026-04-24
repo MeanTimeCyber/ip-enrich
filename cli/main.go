@@ -55,7 +55,7 @@ func printCity(ip netip.Addr) {
 	// Get the MaxMind City DB path from the environment variable
 	dbPath := os.Getenv(maxmind.MaxmindCityDBEnv)
 	if dbPath == "" {
-		fmt.Printf("Must supply MaxMind City DB path with %s\n", maxmind.MaxmindCityDBEnv)
+		fmt.Printf("Must set MaxMind City DB path with the env variable, e.g. 'export %s=<path to db>'\n", maxmind.MaxmindCityDBEnv)
 		os.Exit(-1)
 	}
 
@@ -76,7 +76,7 @@ func printASN(ip netip.Addr) {
 	// Get the MaxMind ASN DB path from the environment variable
 	dbPath := os.Getenv(maxmind.MaxmindASNDBEnv)
 	if dbPath == "" {
-		fmt.Printf("Must supply MaxMind ASN DB path with %s\n", maxmind.MaxmindASNDBEnv)
+		fmt.Printf("Must set MaxMind ASN DB path with the env variable, e.g. 'export %s=<path to db>'\n", maxmind.MaxmindASNDBEnv)
 		os.Exit(-1)
 	}
 
@@ -88,7 +88,7 @@ func printASN(ip netip.Addr) {
 	}
 
 	// Print the results
-	fmt.Println("\n---- ASN ----")
+	fmt.Println("\n---- ASN Lookup ----")
 	maxmind.PrintASNDetails(asn)
 }
 
