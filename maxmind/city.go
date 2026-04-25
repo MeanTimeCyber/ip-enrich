@@ -10,7 +10,7 @@ import (
 )
 
 // https://www.maxmind.com/en/geoip-databases
-func GetCityFromIP(ip netip.Addr, dbPath string) (*City, error) {
+func GetCityFromIP(ip netip.Addr, dbPath string, printInfo bool) (*City, error) {
 	// Open the MaxMind database. The Open function returns a Reader
 	// that can be used to perform lookups on the database.
 	// The Reader must be closed when it is no longer needed.
@@ -20,7 +20,9 @@ func GetCityFromIP(ip netip.Addr, dbPath string) (*City, error) {
 	}
 	defer db.Close()
 
-	printDBInfo(db)
+	if printInfo {
+		printDBInfo(db)
+	}
 
 	// Decode the record into a City struct.
 	// The City struct must have fields that match the structure of the database record,

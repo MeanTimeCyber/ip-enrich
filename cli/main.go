@@ -13,8 +13,18 @@ import (
 func main() {
 	// Define a flag for the IP address to lookup
 	var ipString, domainString string
+	var maxmindDBInfo bool
+	var jsonOutput bool
+
+	// Define command-line flags for the IP address and domain to lookup, as well as options for printing MaxMind DB info and JSON output
 	flag.StringVar(&ipString, "i", "", "IP address to lookup")
 	flag.StringVar(&domainString, "d", "", "Domain to lookup")
+
+	// Define flags for printing MaxMind DB metadata information and for outputting results in JSON format
+	flag.BoolVar(&maxmindDBInfo, "dbinfo", false, "Print MaxMind DB metadata information")
+	flag.BoolVar(&jsonOutput, "json", false, "Output results in JSON format")
+
+	// Parse the command-line flags
 	flag.Parse()
 
 	// Check that the user supplied an IP address or a domain to lookup
@@ -45,51 +55,36 @@ func main() {
 		ip = checkAndParseAddressString(resolvedIP[0].String())
 	}
 
-	// Perform the MaxMind lookups and print the results
-	printCity(ip)
-	printASN(ip)
-}
-
-// printCity performs the MaxMind City lookup for the given IP address and prints the results.
-func printCity(ip netip.Addr) {
-	// Get the MaxMind City DB path from the environment variable
-	dbPath := os.Getenv(maxmind.MaxmindCityDBEnv)
-	if dbPath == "" {
-		fmt.Printf("Must set MaxMind City DB path with the env variable, e.g. 'export %s=<path to db>'\n", maxmind.MaxmindCityDBEnv)
-		os.Exit(-1)
-	}
-
-	// Perform the IP lookups
-	city, err := maxmind.GetCityFromIP(ip, dbPath)
+	// Perform the MaxMind lookups for the IP address
+	city, err := maxmind.GetCityFromIP(ip, os.Getenv(maxmind.MaxmindCityDBEnv), maxmindDBInfo)
 	if err != nil {
-		fmt.Printf("Error looking up IP address: %v\n", err)
+		fmt.Printf("Error looking up city for IP address: %v\n", err)
 		os.Exit(-1)
 	}
 
-	// Print the results
-	fmt.Println("\n---- Geo Lookup ----")
-	maxmind.PrintCityDetails(city)
-}
-
-// printASN performs the MaxMind ASN lookup for the given IP address and prints the results.
-func printASN(ip netip.Addr) {
-	// Get the MaxMind ASN DB path from the environment variable
-	dbPath := os.Getenv(maxmind.MaxmindASNDBEnv)
-	if dbPath == "" {
-		fmt.Printf("Must set MaxMind ASN DB path with the env variable, e.g. 'export %s=<path to db>'\n", maxmind.MaxmindASNDBEnv)
-		os.Exit(-1)
-	}
-
-	// Perform the IP lookups
-	asn, err := maxmind.GetASNFromIP(ip, dbPath)
+	// Perform the MaxMind ASN lookup for the IP address
+	asn, err := maxmind.GetASNFromIP(ip, os.Getenv(maxmind.MaxmindASNDBEnv), maxmindDBInfo)
 	if err != nil {
-		fmt.Printf("Error looking up IP address: %v\n", err)
+		fmt.Printf("Error looking up ASN for IP address: %v\n", err)
 		os.Exit(-1)
 	}
 
-	// Print the results
-	fmt.Println("\n---- ASN Lookup ----")
-	maxmind.PrintASNDetails(asn)
+	// Output the results in JSON format if the flag is set, otherwise print them in a human-readable format
+	if jsonOutput {
+		jsonString, err := maxmind.GetDataAsFormattedJSON(city, asn)
+		if err != nil {
+			fmt.Printf("Error generating JSON output: %v\n", err)
+			os.Exit(-1)
+		}
+		fmt.Println(jsonString)
+	} else {
+		// Print the results to the console in a human-readable format
+		fmt.Println("\n---- Geo Lookup ----")
+		maxmind.PrintCityDetails(city)
+
+		fmt.Println("\n---- ASN Lookup ----")
+		maxmind.PrintASNDetails(asn)
+	}
 }
 
 // checkAndParseAddressString validates the IP address format and returns a netip.Addr if valid,

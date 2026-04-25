@@ -1,6 +1,7 @@
 package maxmind
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -12,7 +13,8 @@ import (
 func printDBInfo(db *maxminddb.Reader) {
 	meta := db.Metadata
 	buildTime := meta.BuildTime()
-	//fmt.Printf("Database: %s (IPv%d, built %s)\n", meta.DatabaseType, meta.IPVersion, buildTime.Format("2006-01-02"))
+	fmt.Printf("Database: %s (IPv%d, built %s)\n", meta.DatabaseType, meta.IPVersion, buildTime.Format("2006-01-02"))
+
 	if buildTime.Before(time.Now().AddDate(0, -3, 0)) {
 		fmt.Fprintln(os.Stderr, "Warning: database is more than 3 months old")
 	}
@@ -83,4 +85,42 @@ func subdivisionValue(subdivision struct {
 	}
 
 	return fmt.Sprintf("%s (%s)", name, subdivision.ISOCode)
+}
+
+func GetDataAsJSON(city *City, asn *ASN) (string, error) {
+	type Result struct {
+		City *City `json:"city,omitempty"`
+		ASN  *ASN  `json:"asn,omitempty"`
+	}
+
+	result := Result{
+		City: city,
+		ASN:  asn,
+	}
+
+	jsonString, err := json.Marshal(result)
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonString), nil
+}
+
+func GetDataAsFormattedJSON(city *City, asn *ASN) (string, error) {
+	type Result struct {
+		City *City `json:"city,omitempty"`
+		ASN  *ASN  `json:"asn,omitempty"`
+	}
+
+	result := Result{
+		City: city,
+		ASN:  asn,
+	}
+
+	jsonString, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonString), nil
 }

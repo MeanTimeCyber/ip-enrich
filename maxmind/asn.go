@@ -7,7 +7,7 @@ import (
 	"github.com/oschwald/maxminddb-golang/v2"
 )
 
-func GetASNFromIP(ip netip.Addr, dbPath string) (*ASN, error) {
+func GetASNFromIP(ip netip.Addr, dbPath string, printInfo bool) (*ASN, error) {
 	// Open the MaxMind database. The Open function returns a Reader
 	// that can be used to perform lookups on the database.
 	// The Reader must be closed when it is no longer needed.
@@ -17,7 +17,9 @@ func GetASNFromIP(ip netip.Addr, dbPath string) (*ASN, error) {
 	}
 	defer db.Close()
 
-	printDBInfo(db)
+	if printInfo {
+		printDBInfo(db)
+	}
 
 	// Decode the record into an ASN struct.
 	// The ASN struct must have fields that match the structure of the database record,
