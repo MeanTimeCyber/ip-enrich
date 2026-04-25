@@ -1,14 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
-	"net"
-	"net/netip"
 	"os"
-
-	"github.com/MeanTimeCyber/ip-enrich/maxmind"
-	"github.com/asaskevich/govalidator"
 )
 
 func main() {
@@ -38,89 +34,79 @@ func main() {
 		os.Exit(-1)
 	}
 
+	// Perform the lookups based on the supplied input
 	if domainString != "" {
-		lookupDomain(domainString, maxmindDBInfo, jsonOutput)
-	}
-
-	if ipString != "" {
-		lookupIP(ipString, maxmindDBInfo, jsonOutput)
-	}
-
-	fmt.Printf("\nFin.\n")
-}
-
-func lookupDomain(domainString string, maxmindDBInfo, jsonOutput bool) {
-	// check domain validity if supplied
-	if !govalidator.IsDNSName(domainString) {
-		fmt.Printf("%s is not a valid domain\n", domainString)
-		os.Exit(-1)
-	}
-
-	// resolve the domain to an IP address
-	resolvedIP, err := net.LookupIP(domainString)
-
-	if err != nil {
-		fmt.Printf("Error resolving domain %q to an address: %s\n", domainString, err.Error())
-		os.Exit(-1)
-	}
-
-	// Use the first resolved IP address for the lookups
-	fmt.Printf("Got address %s for domain %q\n", resolvedIP[0].String(), domainString)
-	lookupIP(resolvedIP[0].String(), maxmindDBInfo, jsonOutput)
-}
-
-func lookupIP(ipString string, maxmindDBInfo, jsonOutput bool) {
-
-	fmt.Printf("Looking up address: %s\n", ipString)
-
-	// validate the IP address format
-	ip := checkAndParseAddressString(ipString)
-
-	// Perform the MaxMind lookups for the IP address
-	city, err := maxmind.GetCityFromIP(ip, os.Getenv(maxmind.MaxmindCityDBEnv), maxmindDBInfo)
-
-	if err != nil {
-		fmt.Printf("Error looking up city for IP address: %v\n", err)
-		os.Exit(-1)
-	}
-
-	// Perform the MaxMind ASN lookup for the IP address
-	asn, err := maxmind.GetASNFromIP(ip, os.Getenv(maxmind.MaxmindASNDBEnv), maxmindDBInfo)
-
-	if err != nil {
-		fmt.Printf("Error looking up ASN for IP address: %v\n", err)
-		os.Exit(-1)
-	}
-
-	// Output the results in JSON format if the flag is set, otherwise print them in a human-readable format
-	if jsonOutput {
-		jsonString, err := maxmind.GetDataAsFormattedJSON(city, asn)
-
+		if err := lookupDomain(domainString, maxmindDBInfo, jsonOutput); err != nil {
+			fmt.Printf("Error looking up domain %q: %s\n", domainString, err.Error())
+			os.Exit(-1)
+		}
+	} else if domainList != "" { // read file line by line and lookup each domain
+		// read file line by line and lookup each domain
+		file, err := os.Open(domainList)
 		if err != nil {
-			fmt.Printf("Error generating JSON output: %v\n", err)
+			fmt.Printf("Error opening domain list file %q: %s\n", domainList, err.Error())
+			os.Exit(-1)
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		
+		// read file line by line and lookup each domain
+		for scanner.Scan() {
+			line := scanner.Text()
+			
+			if line != "" {
+				if err := lookupDomain(line, maxmindDBInfo, jsonOutput); err != nil {
+					fmt.Printf("Error looking up domain %q: %s\n", line, err.Error())
+					os.Exit(-1)
+				}
+				fmt.Println()
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			fmt.Printf("Error reading domain list file %q: %s\n", domainList, err.Error())
+			os.Exit(-1)
+		}
+	} else if ipString != "" { // Perform the lookup for the single supplied IP address
+		if err := lookupIP(ipString, maxmindDBInfo, jsonOutput); err != nil {
+			fmt.Printf("Error looking up IP address %q: %s\n", ipString, err.Error())
 			os.Exit(-1)
 		}
 
-		fmt.Println(jsonString)
-	} else {
-		// Print the results to the console in a human-readable format
-		fmt.Println("\n---- Geo Lookup ----")
-		maxmind.PrintCityDetails(city)
+		fmt.Println()
+	} else if ipList != "" { // Perform the lookups for the list of IP addresses supplied in the file
+		// read file line by line and lookup each IP address
+		file, err := os.Open(ipList)
+		
+		if err != nil {
+			fmt.Printf("Error opening IP list file %q: %s\n", ipList, err.Error())
+			os.Exit(-1)
+		}
+		
+		defer file.Close()
 
-		fmt.Println("\n---- ASN Lookup ----")
-		maxmind.PrintASNDetails(asn)
+		// read file line by line and lookup each IP address
+		scanner := bufio.NewScanner(file)
+		
+		for scanner.Scan() {
+			line := scanner.Text()
+			
+			if line != "" {
+				if err := lookupIP(line, maxmindDBInfo, jsonOutput); err != nil {
+					fmt.Printf("Error looking up IP address %q: %s\n", line, err.Error())
+					os.Exit(-1)
+				}
+				
+				fmt.Println()
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			fmt.Printf("Error reading IP list file %q: %s\n", ipList, err.Error())
+			os.Exit(-1)
+		}
 	}
-}
 
-// checkAndParseAddressString validates the IP address format and returns a netip.Addr if valid,
-// otherwise it prints an error message and exits the program.
-func checkAndParseAddressString(ipString string) netip.Addr {
-	ip, err := netip.ParseAddr(ipString)
-
-	if err != nil {
-		fmt.Printf("Invalid IP address format: %s\n", ipString)
-		os.Exit(-1)
-	}
-
-	return ip
+	fmt.Printf("Fin.\n")
 }
