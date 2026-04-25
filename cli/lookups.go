@@ -14,7 +14,7 @@ import (
 func lookupDomain(domainString string, maxmindDBInfo, jsonOutput bool) error {
 	// check domain validity if supplied
 	if !govalidator.IsDNSName(domainString) {
-		return fmt.Errorf("%s is not a valid domain: %s\n", domainString)
+		return fmt.Errorf("%s is not a valid domain\n", domainString)
 	}
 
 	fmt.Printf("Resolving domain %q\n", domainString)
