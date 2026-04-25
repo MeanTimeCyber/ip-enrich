@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/MeanTimeCyber/ip-enrich/maxmind"
+	"github.com/asaskevich/govalidator"
 )
 
 func main() {
@@ -34,6 +35,14 @@ func main() {
 		os.Exit(-1)
 	}
 
+	// Perform the MaxMind lookups and output the results
+	doLookup(ipString, domainString, maxmindDBInfo, jsonOutput)
+
+	fmt.Println("Fin.")
+}
+
+// doLookup performs the MaxMind lookups for the given IP address or domain and outputs the results in either human-readable or JSON format based on the provided flags.
+func doLookup(ipString, domainString string, maxmindDBInfo, jsonOutput bool) {
 	var ip netip.Addr
 
 	if ipString != "" {
@@ -42,6 +51,15 @@ func main() {
 		// validate the IP address format
 		ip = checkAndParseAddressString(ipString)
 	} else {
+		// check domain validity if supplied
+		if domainString != "" {
+			// check the domain
+			if !govalidator.IsDNSName(domainString) {
+				fmt.Printf("%s is not a valid domain\n", domainString)
+				os.Exit(-1)
+			}
+		}
+
 		// resolve the domain to an IP address
 		resolvedIP, err := net.LookupIP(domainString)
 
@@ -57,6 +75,7 @@ func main() {
 
 	// Perform the MaxMind lookups for the IP address
 	city, err := maxmind.GetCityFromIP(ip, os.Getenv(maxmind.MaxmindCityDBEnv), maxmindDBInfo)
+	
 	if err != nil {
 		fmt.Printf("Error looking up city for IP address: %v\n", err)
 		os.Exit(-1)
@@ -64,6 +83,7 @@ func main() {
 
 	// Perform the MaxMind ASN lookup for the IP address
 	asn, err := maxmind.GetASNFromIP(ip, os.Getenv(maxmind.MaxmindASNDBEnv), maxmindDBInfo)
+	
 	if err != nil {
 		fmt.Printf("Error looking up ASN for IP address: %v\n", err)
 		os.Exit(-1)
@@ -72,10 +92,12 @@ func main() {
 	// Output the results in JSON format if the flag is set, otherwise print them in a human-readable format
 	if jsonOutput {
 		jsonString, err := maxmind.GetDataAsFormattedJSON(city, asn)
+		
 		if err != nil {
 			fmt.Printf("Error generating JSON output: %v\n", err)
 			os.Exit(-1)
 		}
+		
 		fmt.Println(jsonString)
 	} else {
 		// Print the results to the console in a human-readable format
