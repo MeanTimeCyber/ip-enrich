@@ -28,7 +28,12 @@ This creates a local executable named `ip-enrich`.
 
 ## Run
 
-Set the MaxMind database paths with `MAXMIND_CITY_DB` and `MAXMIND_ASN_DB`, then pass either an IP with `-i` or a domain with `-d`.
+Set the MaxMind database paths with `MAXMIND_CITY_DB` and `MAXMIND_ASN_DB`, then pass one of these inputs:
+
+- `-i <ip-address>` for a single IP
+- `-d <domain>` for a single domain
+- `-il <file>` for a file of IPs (one per line)
+- `-dl <file>` for a file of domains (one per line)
 
 Run directly with Go:
 
@@ -48,10 +53,22 @@ Look up a domain:
 MAXMIND_CITY_DB=sources/GeoLite2-City.mmdb MAXMIND_ASN_DB=sources/GeoLite2-ASN.mmdb ./ip-enrich -d example.com
 ```
 
+Look up IPs from a list file:
+
+```bash
+MAXMIND_CITY_DB=sources/GeoLite2-City.mmdb MAXMIND_ASN_DB=sources/GeoLite2-ASN.mmdb ./ip-enrich -il ip_list.txt
+```
+
+Look up domains from a list file:
+
+```bash
+MAXMIND_CITY_DB=sources/GeoLite2-City.mmdb MAXMIND_ASN_DB=sources/GeoLite2-ASN.mmdb ./ip-enrich -dl domain_list.txt
+```
+
 ## Usage
 
 ```text
-./ip-enrich [-i <ip-address> | -d <domain>] [-json] [-dbinfo]
+./ip-enrich [-i <ip-address> | -d <domain> | -il <file> | -dl <file>] [-json] [-dbinfo]
 ```
 
 Example:
@@ -76,8 +93,9 @@ MAXMIND_CITY_DB=sources/GeoLite2-City.mmdb MAXMIND_ASN_DB=sources/GeoLite2-ASN.m
 
 - The City database path is required through `MAXMIND_CITY_DB`.
 - The ASN database path is required through `MAXMIND_ASN_DB`.
-- You must provide at least one lookup input: `-i` (IP) or `-d` (domain).
-- If both `-i` and `-d` are provided, `-i` is used.
+- You must provide at least one lookup input: `-i`, `-d`, `-il`, or `-dl`.
+- List files for `-il` and `-dl` are read one line at a time; blank lines are skipped.
+- If multiple lookup flags are provided, the first matching mode is used in this order: `-d`, then `-dl`, then `-i`, then `-il`.
 - The Makefile build uses `-trimpath -ldflags="-s -w"` to reduce binary size.
 - Output is printed in two sections:
 	- `---- Geo Lookup ----` as a two-column table.
