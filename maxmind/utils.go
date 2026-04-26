@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/oschwald/maxminddb-golang/v2"
 )
@@ -19,6 +21,15 @@ func printDBInfo(db *maxminddb.Reader) {
 	if buildTime.Before(time.Now().AddDate(0, -3, 0)) {
 		fmt.Fprintln(os.Stderr, "Warning: database is more than 3 months old")
 	}
+}
+
+// PrintDBInfo prints metadata information of the MaxMind database reader.
+func PrintDBInfo(db *maxminddb.Reader) {
+	if db == nil {
+		return
+	}
+
+	printDBInfo(db)
 }
 
 // EnglishName returns the English name from the given map of names, or an empty string if there is no English name or if the map is empty.
@@ -38,6 +49,32 @@ func EnglishName(names map[string]string) string {
 	}
 
 	return ""
+}
+
+// SanitizeTerminalText strips control characters and ANSI escape bytes from text shown to users.
+func SanitizeTerminalText(value string) string {
+	var builder strings.Builder
+	for _, r := range value {
+		switch {
+		case r == '\x1b':
+			continue
+		case r == '\n' || r == '\r' || r == '\t':
+			builder.WriteRune(' ')
+		case unicode.IsControl(r):
+			continue
+		default:
+			builder.WriteRune(r)
+		}
+	}
+
+	return builder.String()
+}
+
+func escapeMarkdownCell(value string) string {
+	value = SanitizeTerminalText(value)
+	value = strings.ReplaceAll(value, "\\", "\\\\")
+	value = strings.ReplaceAll(value, "|", "\\|")
+	return value
 }
 
 type tableRow struct {
@@ -124,18 +161,18 @@ func GetDataAsMarkdownTable(results []Result) string {
 
 	for _, result := range results {
 		builder.WriteString("|")
-		builder.WriteString(result.Domain)
+		builder.WriteString(escapeMarkdownCell(result.Domain))
 		builder.WriteString("|")
-		builder.WriteString(result.IP)
+		builder.WriteString(escapeMarkdownCell(result.IP))
 		builder.WriteString("|")
 
 		if result.City != nil {
-			builder.WriteString(EnglishName(result.City.Country.Names))
+			builder.WriteString(escapeMarkdownCell(EnglishName(result.City.Country.Names)))
 			builder.WriteString(" | ")
-			builder.WriteString(DisplayCityName(*result.City))
+			builder.WriteString(escapeMarkdownCell(DisplayCityName(*result.City)))
 			builder.WriteString(" | ")
 			if len(result.City.Subdivisions) > 0 {
-				builder.WriteString(GetSubdivisionValue(result.City.Subdivisions[0]))
+				builder.WriteString(escapeMarkdownCell(GetSubdivisionValue(result.City.Subdivisions[0])))
 			} else {
 				builder.WriteString("")
 			}
@@ -144,7 +181,7 @@ func GetDataAsMarkdownTable(results []Result) string {
 		}
 
 		if result.ASN != nil {
-			builder.WriteString(fmt.Sprintf("AS%d %s", result.ASN.AutonomousSystemNumber, result.ASN.AutonomousSystemOrganization))
+			builder.WriteString(escapeMarkdownCell("AS" + strconv.FormatUint(uint64(result.ASN.AutonomousSystemNumber), 10) + " " + result.ASN.AutonomousSystemOrganization))
 		} else {
 			builder.WriteString("")
 		}

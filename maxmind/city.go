@@ -9,6 +9,25 @@ import (
 	"github.com/oschwald/maxminddb-golang/v2"
 )
 
+// GetCityFromIPWithReader decodes city data for an IP using an already-open MaxMind reader.
+func GetCityFromIPWithReader(ip netip.Addr, db *maxminddb.Reader, printInfo bool) (*City, error) {
+	if db == nil {
+		return nil, fmt.Errorf("city database reader is nil")
+	}
+
+	if printInfo {
+		printDBInfo(db)
+	}
+
+	var city City
+	err := db.Lookup(ip).Decode(&city)
+	if err != nil {
+		return nil, err
+	}
+
+	return &city, nil
+}
+
 // https://www.maxmind.com/en/geoip-databases
 func GetCityFromIP(ip netip.Addr, dbPath string, printInfo bool) (*City, error) {
 	// Open the MaxMind database. The Open function returns a Reader
@@ -20,26 +39,16 @@ func GetCityFromIP(ip netip.Addr, dbPath string, printInfo bool) (*City, error) 
 	}
 	defer db.Close()
 
-	if printInfo {
-		printDBInfo(db)
-	}
-
-	// Decode the record into a City struct.
-	// The City struct must have fields that match the structure of the database record,
-	// and the maxminddb tags must be used to specify the field names in the database.
-	var city City
-	err = db.Lookup(ip).Decode(&city)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &city, nil
+	return GetCityFromIPWithReader(ip, db, printInfo)
 }
 
 // displayCityName returns the city name to display, which is the city name if it is available,
 // otherwise it falls back to the locality name, and if that is not available it returns an empty string.
 func PrintCityDetails(city *City) {
+	if city == nil {
+		return
+	}
+
 	displayCity := DisplayCityName(*city)
 	rawLocality := EnglishName(city.City.Names)
 
@@ -105,8 +114,8 @@ func PrintCityDetails(city *City) {
 
 	for _, row := range rows {
 		dataRow := table.Row()
-		dataRow.Column(row.label)
-		dataRow.Column(row.value)
+		dataRow.Column(SanitizeTerminalText(row.label))
+		dataRow.Column(SanitizeTerminalText(row.value))
 	}
 
 	table.Print(os.Stdout)

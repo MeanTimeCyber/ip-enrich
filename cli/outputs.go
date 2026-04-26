@@ -38,8 +38,8 @@ func outputHumanReadable(results []maxmind.Result) {
 
 	for _, result := range results {
 		row := table.Row()
-		row.Column(result.Domain)
-		row.Column(result.IP)
+		row.Column(maxmind.SanitizeTerminalText(result.Domain))
+		row.Column(maxmind.SanitizeTerminalText(result.IP))
 		row.Column(resultCountry(result))
 		row.Column(resultCity(result))
 		row.Column(resultSubdivision(result))
@@ -55,7 +55,7 @@ func resultCountry(result maxmind.Result) string {
 		return ""
 	}
 
-	return maxmind.EnglishName(result.City.Country.Names)
+	return maxmind.SanitizeTerminalText(maxmind.EnglishName(result.City.Country.Names))
 }
 
 func resultCity(result maxmind.Result) string {
@@ -63,7 +63,7 @@ func resultCity(result maxmind.Result) string {
 		return ""
 	}
 
-	return maxmind.DisplayCityName(*result.City)
+	return maxmind.SanitizeTerminalText(maxmind.DisplayCityName(*result.City))
 }
 
 func resultSubdivision(result maxmind.Result) string {
@@ -71,7 +71,7 @@ func resultSubdivision(result maxmind.Result) string {
 		return ""
 	}
 
-	return maxmind.GetSubdivisionValue(result.City.Subdivisions[0])
+	return maxmind.SanitizeTerminalText(maxmind.GetSubdivisionValue(result.City.Subdivisions[0]))
 }
 
 func resultASN(result maxmind.Result) string {
@@ -79,5 +79,5 @@ func resultASN(result maxmind.Result) string {
 		return ""
 	}
 
-	return fmt.Sprintf("AS%d %s", result.ASN.AutonomousSystemNumber, result.ASN.AutonomousSystemOrganization)
+	return maxmind.SanitizeTerminalText(fmt.Sprintf("AS%d %s", result.ASN.AutonomousSystemNumber, result.ASN.AutonomousSystemOrganization))
 }

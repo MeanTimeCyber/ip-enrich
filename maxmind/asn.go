@@ -7,6 +7,25 @@ import (
 	"github.com/oschwald/maxminddb-golang/v2"
 )
 
+// GetASNFromIPWithReader decodes ASN data for an IP using an already-open MaxMind reader.
+func GetASNFromIPWithReader(ip netip.Addr, db *maxminddb.Reader, printInfo bool) (*ASN, error) {
+	if db == nil {
+		return nil, fmt.Errorf("asn database reader is nil")
+	}
+
+	if printInfo {
+		printDBInfo(db)
+	}
+
+	var asn ASN
+	err := db.Lookup(ip).Decode(&asn)
+	if err != nil {
+		return nil, err
+	}
+
+	return &asn, nil
+}
+
 func GetASNFromIP(ip netip.Addr, dbPath string, printInfo bool) (*ASN, error) {
 	// Open the MaxMind database. The Open function returns a Reader
 	// that can be used to perform lookups on the database.
@@ -17,23 +36,13 @@ func GetASNFromIP(ip netip.Addr, dbPath string, printInfo bool) (*ASN, error) {
 	}
 	defer db.Close()
 
-	if printInfo {
-		printDBInfo(db)
-	}
-
-	// Decode the record into an ASN struct.
-	// The ASN struct must have fields that match the structure of the database record,
-	// and the maxminddb tags must be used to specify the field names in the database.
-	var asn ASN
-	err = db.Lookup(ip).Decode(&asn)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &asn, nil
+	return GetASNFromIPWithReader(ip, db, printInfo)
 }
 
 func PrintASNDetails(asn *ASN) {
-	fmt.Printf("AS%d %s\n", asn.AutonomousSystemNumber, asn.AutonomousSystemOrganization)
+	if asn == nil {
+		return
+	}
+
+	fmt.Printf("AS%d %s\n", asn.AutonomousSystemNumber, SanitizeTerminalText(asn.AutonomousSystemOrganization))
 }
