@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"os"
@@ -9,41 +8,6 @@ import (
 
 	"github.com/MeanTimeCyber/ip-enrich/maxmind"
 )
-
-const maxInputLineBytes = 1024 * 1024
-
-func newInputScanner(file *os.File) *bufio.Scanner {
-	scanner := bufio.NewScanner(file)
-	scanner.Buffer(make([]byte, 1024), maxInputLineBytes)
-	return scanner
-}
-
-func normalizeInputLine(line string) (string, bool) {
-	line = strings.TrimSpace(line)
-	if line == "" || strings.HasPrefix(line, "#") {
-		return "", false
-	}
-
-	return line, true
-}
-
-func requireReadableFileFromEnv(envName string) (string, error) {
-	path := strings.TrimSpace(os.Getenv(envName))
-	if path == "" {
-		return "", fmt.Errorf("environment variable %s must be set", envName)
-	}
-
-	stat, err := os.Stat(path)
-	if err != nil {
-		return "", fmt.Errorf("cannot access %s (%s): %w", envName, path, err)
-	}
-
-	if stat.IsDir() {
-		return "", fmt.Errorf("%s (%s) points to a directory, expected a file", envName, path)
-	}
-
-	return path, nil
-}
 
 func main() {
 	// Define a flag for the IP address to lookup
