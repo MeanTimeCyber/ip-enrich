@@ -11,10 +11,10 @@ import (
 )
 
 // lookupDomain resolves the given domain to an IP address and performs the MaxMind lookups for that IP address.
-func lookupDomain(domainString string, maxmindDBInfo, jsonOutput bool) error {
+func lookupDomain(domainString string, maxmindDBInfo bool) (*maxmind.Result, error) {
 	// check domain validity if supplied
 	if !govalidator.IsDNSName(domainString) {
-		return fmt.Errorf("%s is not a valid domain\n", domainString)
+		return nil, fmt.Errorf("%s is not a valid domain\n", domainString)
 	}
 
 	fmt.Printf("Resolving domain %q\n", domainString)
@@ -23,60 +23,49 @@ func lookupDomain(domainString string, maxmindDBInfo, jsonOutput bool) error {
 	resolvedIP, err := net.LookupIP(domainString)
 
 	if err != nil {
-		return fmt.Errorf("Error resolving domain %q to an address: %s", domainString, err.Error())
+		return nil, fmt.Errorf("Error resolving domain %q to an address: %s", domainString, err.Error())
 	}
 
 	// Use the first resolved IP address for the lookups
-	fmt.Printf("Got address %s for domain %q\n\n", resolvedIP[0].String(), domainString)
-	err = lookupIP(resolvedIP[0].String(), maxmindDBInfo, jsonOutput)
+	fmt.Printf("Got address %s for domain %q\n", resolvedIP[0].String(), domainString)
 
-	return err
+	return lookupIP(domainString, resolvedIP[0].String(), maxmindDBInfo)
 }
 
 // lookupIP performs the MaxMind lookups for the given IP address and outputs the results in either JSON format or a human-readable format.
-func lookupIP(ipString string, maxmindDBInfo, jsonOutput bool) error {
+func lookupIP(domainString, ipString string, maxmindDBInfo bool) (*maxmind.Result, error) {
 	fmt.Printf("Looking up address: %s\n", ipString)
 
 	// validate the IP address format
 	ip, err := netip.ParseAddr(ipString)
 
 	if err != nil {
-		return fmt.Errorf("Error parsing IP address %q: %s", ipString, err.Error())
+		return nil, fmt.Errorf("Error parsing IP address %q: %s", ipString, err.Error())
 	}
 
-	fmt.Printf("Resolving domain %q\n", ipString)
+	fmt.Printf("Resolving IP %q\n", ipString)
 
 	// Perform the MaxMind lookups for the IP address
 	city, err := maxmind.GetCityFromIP(ip, os.Getenv(maxmind.MaxmindCityDBEnv), maxmindDBInfo)
 
 	if err != nil {
-		return fmt.Errorf("Error looking up city for IP address %q: %v", ipString, err)
+		return nil, fmt.Errorf("Error looking up city for IP address %q: %v", ipString, err)
 	}
 
 	// Perform the MaxMind ASN lookup for the IP address
 	asn, err := maxmind.GetASNFromIP(ip, os.Getenv(maxmind.MaxmindASNDBEnv), maxmindDBInfo)
 
 	if err != nil {
-		return fmt.Errorf("Error looking up ASN for IP address %q: %v", ipString, err)
+		return nil, fmt.Errorf("Error looking up ASN for IP address %q: %v", ipString, err)
 	}
 
-	// Output the results in JSON format if the flag is set, otherwise print them in a human-readable format
-	if jsonOutput {
-		jsonString, err := maxmind.GetDataAsFormattedJSON(city, asn)
+	fmt.Printf("Got city and ASN information for IP %q\n\n", ipString)
 
-		if err != nil {
-			return fmt.Errorf("Error generating JSON output: %v", err)
-		}
-
-		fmt.Println(jsonString)
-	} else {
-		// Print the results to the console in a human-readable format
-		fmt.Println("\n---- Geo Lookup ----")
-		maxmind.PrintCityDetails(city)
-
-		fmt.Println("\n---- ASN Lookup ----")
-		maxmind.PrintASNDetails(asn)
-	}
-
-	return nil
+	// Create a Result struct to hold the lookup results and return it
+	return &maxmind.Result{
+		Domain: domainString,
+		IP:     ipString,
+		City:   city,
+		ASN:    asn,
+	}, nil
 }

@@ -5,6 +5,13 @@ const (
 	MaxmindASNDBEnv  = "MAXMIND_ASN_DB"
 )
 
+type Result struct {
+	Domain string `json:"domain,omitempty"`
+	IP     string `json:"ip,omitempty"`
+	City   *City  `json:"city,omitempty"`
+	ASN    *ASN   `json:"asn,omitempty"`
+}
+
 type City struct {
 	City struct {
 		GeoNameID uint32            `maxminddb:"geoname_id"`

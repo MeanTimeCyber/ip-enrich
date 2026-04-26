@@ -40,8 +40,8 @@ func GetCityFromIP(ip netip.Addr, dbPath string, printInfo bool) (*City, error) 
 // displayCityName returns the city name to display, which is the city name if it is available,
 // otherwise it falls back to the locality name, and if that is not available it returns an empty string.
 func PrintCityDetails(city *City) {
-	displayCity := displayCityName(*city)
-	rawLocality := englishName(city.City.Names)
+	displayCity := DisplayCityName(*city)
+	rawLocality := EnglishName(city.City.Names)
 
 	var rows []tableRow
 
@@ -58,11 +58,11 @@ func PrintCityDetails(city *City) {
 	}
 
 	if len(city.Subdivisions) > 1 {
-		rows = append(rows, tableRow{label: "District", value: subdivisionValue(city.Subdivisions[1])})
+		rows = append(rows, tableRow{label: "District", value: GetSubdivisionValue(city.Subdivisions[1])})
 	}
 
 	for index := 2; index < len(city.Subdivisions); index++ {
-		rows = append(rows, tableRow{label: fmt.Sprintf("Subdivision %d", index+1), value: subdivisionValue(city.Subdivisions[index])})
+		rows = append(rows, tableRow{label: fmt.Sprintf("Subdivision %d", index+1), value: GetSubdivisionValue(city.Subdivisions[index])})
 	}
 
 	if city.Postal.Code != "" {
@@ -72,21 +72,21 @@ func PrintCityDetails(city *City) {
 	rows = append(rows, tableRow{label: "City", value: displayCity})
 
 	if len(city.Subdivisions) > 0 {
-		rows = append(rows, tableRow{label: "Region", value: subdivisionValue(city.Subdivisions[0])})
+		rows = append(rows, tableRow{label: "Region", value: GetSubdivisionValue(city.Subdivisions[0])})
 	}
 
-	rows = append(rows, tableRow{label: "Country", value: fmt.Sprintf("%s (%s)", englishName(city.Country.Names), city.Country.ISOCode)})
+	rows = append(rows, tableRow{label: "Country", value: fmt.Sprintf("%s (%s)", EnglishName(city.Country.Names), city.Country.ISOCode)})
 
 	if city.Country.IsInEuropeanUnion {
 		rows = append(rows, tableRow{label: "In European Union", value: "yes"})
 	}
 
 	// if city.RegisteredCountry.ISOCode != "" {
-	// 	rows = append(rows, tableRow{label: "Registered Country", value: fmt.Sprintf("%s (%s)", englishName(city.RegisteredCountry.Names), city.RegisteredCountry.ISOCode)})
+	// 	rows = append(rows, tableRow{label: "Registered Country", value: fmt.Sprintf("%s (%s)", EnglishName(city.RegisteredCountry.Names), city.RegisteredCountry.ISOCode)})
 	// }
 
 	if city.RepresentedCountry.ISOCode != "" {
-		representedCountry := fmt.Sprintf("%s (%s)", englishName(city.RepresentedCountry.Names), city.RepresentedCountry.ISOCode)
+		representedCountry := fmt.Sprintf("%s (%s)", EnglishName(city.RepresentedCountry.Names), city.RepresentedCountry.ISOCode)
 		if city.RepresentedCountry.Type != "" {
 			representedCountry += fmt.Sprintf(" [%s]", city.RepresentedCountry.Type)
 		}
@@ -94,7 +94,7 @@ func PrintCityDetails(city *City) {
 	}
 
 	if city.Continent.Code != "" || len(city.Continent.Names) > 0 {
-		rows = append(rows, tableRow{label: "Continent", value: fmt.Sprintf("%s (%s)", englishName(city.Continent.Names), city.Continent.Code)})
+		rows = append(rows, tableRow{label: "Continent", value: fmt.Sprintf("%s (%s)", EnglishName(city.Continent.Names), city.Continent.Code)})
 	}
 
 	if city.Location.TimeZone != "" {
