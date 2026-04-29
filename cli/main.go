@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/MeanTimeCyber/ip-enrich/maxmind"
+	"github.com/dustin/go-humanize/english"
 )
 
 func main() {
@@ -167,7 +168,7 @@ func main() {
 		}
 	}
 
-	fmt.Printf("Done with lookups. Got %d results.\n\n", len(results))
+	fmt.Printf("Done with lookups. Got %s.\n\n", english.Plural(len(results), "result", "results"))
 
 	// Output the results in the specified format
 	if jsonOutput {

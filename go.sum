@@ -1,5 +1,7 @@
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
+github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
+github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/markkurossi/tabulate v0.0.0-20251126123558-a08056f6160f h1:u5MRsdjmedlD5iDJzIzPICOhdD2hs9rQKixfuZf6jqY=
 github.com/markkurossi/tabulate v0.0.0-20251126123558-a08056f6160f/go.mod h1:Jol1zHueCHE+CSGXfTFoSGftCpxVkFZSkAQkZP2LFrU=
 github.com/oschwald/maxminddb-golang/v2 v2.1.1 h1:lA8FH0oOrM4u7mLvowq8IT6a3Q/qEnqRzLQn9eH5ojc=
