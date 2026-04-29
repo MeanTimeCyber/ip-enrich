@@ -114,6 +114,24 @@ func lookupIP(resources *lookupResources, domainString, ipString string) (*maxmi
 
 	fmt.Printf("Resolving IP %q\n", ipString)
 
+	// If a domain name was not supplied, perform a reverse DNS lookup to get the domain name for the IP address
+	if domainString == "" {
+		// Perform a reverse DNS lookup to get the domain name for the IP address
+		ctx, cancel := context.WithTimeout(context.Background(), resources.dnsTimeout)
+		defer cancel()
+
+		domainNames, err := resources.resolver.LookupAddr(ctx, ipString)
+
+		if err != nil {
+			fmt.Printf("Error performing reverse DNS lookup for IP address %q: %s\n", ipString, err.Error())
+		} else if len(domainNames) > 0 {
+			domainString = fmt.Sprintf("%s (reverse lookup)", domainNames[0])
+			fmt.Printf("Got domain %q for IP %q\n", domainString, ipString)
+		} else {
+			fmt.Printf("No domain names found for IP address %q\n", ipString)
+		}
+	}
+
 	// Perform the MaxMind lookups for the IP address
 	city, err := maxmind.GetCityFromIPWithReader(ip, resources.cityDB, resources.printInfo)
 
