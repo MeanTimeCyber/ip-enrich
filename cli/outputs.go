@@ -28,7 +28,7 @@ func outputMarkdown(results []maxmind.Result) {
 
 // outputHumanReadable outputs the MaxMind lookup results in a human-readable format, which is a table with columns for the domain, IP address, country, city, subdivision, and ASN.
 func outputHumanReadable(results []maxmind.Result) {
-	table := tabulate.New(tabulate.Simple)
+	table := tabulate.New(tabulate.Unicode)
 	table.Header("Domain")
 	table.Header("IP")
 	table.Header("Country")
