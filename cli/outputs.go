@@ -28,26 +28,43 @@ func outputMarkdown(results []maxmind.Result) {
 
 // outputHumanReadable outputs the MaxMind lookup results in a human-readable format, which is a table with columns for the domain, IP address, country, city, subdivision, and ASN.
 func outputHumanReadable(results []maxmind.Result) {
+	// Print a table for the city information
 	table := tabulate.New(tabulate.Unicode)
-	table.Header("Domain")
 	table.Header("IP")
 	table.Header("Country")
-	table.Header("City")
 	table.Header("Subdivision")
+	table.Header("City")
+	table.Header("Name")
+	table.Header("Postal Code")
+
+	for _, result := range results {
+		row := table.Row()
+		row.Column(maxmind.SanitizeTerminalText(result.IP))
+		row.Column(resultCountry(result))
+		row.Column(resultSubdivision(result))
+		row.Column(resultCity(result))
+		row.Column(resultName(result))
+		row.Column(resultPostalCode(result))
+	}
+
+	table.Print(os.Stdout)
+	fmt.Println()
+
+	// Print a separate table for ASN information	
+	table = tabulate.New(tabulate.Unicode)
+	table.Header("IP")
 	table.Header("ASN")
 
 	for _, result := range results {
 		row := table.Row()
-		row.Column(maxmind.SanitizeTerminalText(result.Domain))
 		row.Column(maxmind.SanitizeTerminalText(result.IP))
-		row.Column(resultCountry(result))
-		row.Column(resultCity(result))
-		row.Column(resultSubdivision(result))
 		row.Column(resultASN(result))
 	}
 
 	table.Print(os.Stdout)
 	fmt.Println()
+
+	// TODO something with reverse domain lookups, if we have them
 }
 
 func resultCountry(result maxmind.Result) string {
@@ -80,4 +97,20 @@ func resultASN(result maxmind.Result) string {
 	}
 
 	return maxmind.SanitizeTerminalText(fmt.Sprintf("AS%d %s", result.ASN.AutonomousSystemNumber, result.ASN.AutonomousSystemOrganization))
+}
+
+func resultName(result maxmind.Result) string {
+	if result.City == nil {
+		return ""
+	}
+
+	return maxmind.SanitizeTerminalText(maxmind.EnglishName(result.City.City.Names))
+}
+
+func resultPostalCode(result maxmind.Result) string {
+	if result.City == nil {
+		return ""
+	}
+
+	return maxmind.SanitizeTerminalText(result.City.Postal.Code)
 }
